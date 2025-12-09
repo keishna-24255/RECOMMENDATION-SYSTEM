@@ -70,13 +70,12 @@ To measure how well the recommendation system performs, we evaluated using:
 RMSE (Root Mean Squared Error)
 MAE (Mean Absolute Error)
 Precision & Recall
+Top-K Recommendation Accuracy
+These metrics show the accuracy and relevance of the recommended items.
 
 #OUTPUT
+
 <img width="463" height="626" alt="Image" src="https://github.com/user-attachments/assets/5dedd7f7-52d8-43a0-bd99-8092b6ec57dc" />
 
 <img width="443" height="416" alt="Image" src="https://github.com/user-attachments/assets/42819a37-490a-4853-8807-fdf66e511d0b" />
 
-
-Top-K Recommendation Accuracy
-
-These metrics show the accuracy and relevance of the recommended items.
