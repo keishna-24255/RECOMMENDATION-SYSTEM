@@ -1,0 +1,80 @@
+
+import pandas as pd
+import numpy as np
+from sklearn.metrics.pairwise import cosine_similarity
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+data = {
+    'User': ['A','A','A','B','B','C','C','D','D','E'],
+    'Movie': ['Movie1','Movie2','Movie3','Movie1','Movie3',
+              'Movie2','Movie3','Movie1','Movie2','Movie3'],
+    'Rating': [5,3,4,4,5,2,4,5,3,4]
+}
+
+df = pd.DataFrame(data)
+print("Sample Rating Dataset:")
+display(df)
+
+user_item = df.pivot_table(index="User", columns="Movie", values="Rating")
+print("User-Item Matrix:")
+display(user_item)
+user_item_filled = user_item.fillna(0)
+
+similarity_matrix = cosine_similarity(user_item_filled)
+similarity_df = pd.DataFrame(similarity_matrix, index=user_item.index, columns=user_item.index)
+
+print("User Similarity Matrix:")
+display(similarity_df)
+
+plt.figure(figsize=(6,4))
+sns.heatmap(similarity_df, annot=True, cmap="Blues")
+plt.title("User Similarity Heatmap")
+plt.show()
+
+def recommend_movies(target_user, user_item_matrix, similarity_df, top_n=2):
+    print(f"\nGenerating Recommendations for User: {target_user}")
+
+    similar_users = similarity_df[target_user].sort_values(ascending=False)
+    similar_users = similar_users.drop(target_user) 
+    print("\nMost Similar Users:")
+    print(similar_users.head(3))
+    target_user_movies = user_item_matrix.loc[target_user].dropna().index.tolist()
+
+    recommendations = {}
+
+    for user, score in similar_users.items():
+        user_ratings = user_item_matrix.loc[user].dropna()
+
+        for movie, rating in user_ratings.items():
+            if movie not in target_user_movies:
+                if movie not in recommendations:
+                    recommendations[movie] = rating * score
+                else:
+                    recommendations[movie] += rating * score
+    sorted_recommendations = sorted(recommendations.items(), key=lambda x: x[1], reverse=True)
+
+    return sorted_recommendations[:top_n]
+
+recommendations = recommend_movies("A", user_item, similarity_df)
+
+print("\nTop Movie Recommendations for User A:")
+for movie, score in recommendations:
+    print(f"{movie} → Score: {round(score, 2)}")
+
+
+def predict_rating(user, movie, user_item_matrix, similarity_df):
+    similar_users = similarity_df[user].drop(user)
+
+    total, sim_sum = 0, 0
+
+    for other_user, sim in similar_users.items():
+        if movie in user_item_matrix.columns and not np.isnan(user_item_matrix.loc[other_user, movie]):
+            total += sim * user_item_matrix.loc[other_user, movie]
+            sim_sum += sim
+
+    return total / sim_sum if sim_sum != 0 else None
+
+predicted = predict_rating("A", "Movie1", user_item, similarity_df)
+
+print("\nPredicted Rating for A on Movie1:", round(predicted, 2))
